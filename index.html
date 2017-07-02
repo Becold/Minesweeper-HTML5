@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Minesweeper</title>
+  <style>
+    #jeu {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    #jeu #gameboard {
+      float: left;
+      position: relative;
+    }
+
+    #jeu #gameboard #board-game {
+      position: absolute;
+    }
+
+    #jeu #options {
+      float: left;
+      border: 1px solid black;
+      width: 250px;
+      margin-left: 8px;
+      padding: 5px;
+    }
+
+    .options-subtitle {
+      font-weight: bold;
+    }
+
+    .options-size {
+      width: 40px;
+    }
+
+    #settings-button {
+      display: block;
+      margin: auto;
+      margin-top: 20px;
+      background-color: green;
+      color: white;
+      border: none;
+      padding: 8px 35px;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="jeu">
+      <div id="gameboard">
+        <canvas id="canvas_gameboard"></canvas>
+      </div>
+
+      <div id="options">
+        <div>
+          <span class="options-subtitle">Difficulty:</span><br />
+          <input type="radio" name="difficulty" value="easy" /> Easy 
+          <input type="radio" name="difficulty" value="medium" /> Medium 
+          <input type="radio" name="difficulty" value="hard" /> Hard 
+        </div>
+
+        <div>
+          <span class="options-subtitle">Settings:</span><br />
+          <span>Nb Mines:</span> <input type="number" name="nb_mines" value="10" /><br />
+          <span>Taille:</span> <input type="number" class="options-size" name="height" value="9" /> x <input type="number" class="options-size" name="width" value="9" /><br />
+          <button id="settings-button" name="generate">Générer</button>
+        </div>
+      </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

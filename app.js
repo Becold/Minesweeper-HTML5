@@ -20,6 +20,43 @@
     // @return float Random number between min and max
     function rand(min, max) { return (Math.random() * (max - min) + min); }
 
+    // @return boolean Return true if a and b is 
+    function _between(value, range) { return (value >= range[0]) && (value <= range[1]); }
+
+
+    /*
+     * Globals variables
+     */
+
+    let gameboard_canvas = document.getElementById("canvas_gameboard");
+
+    let gameboard = gameboard_canvas.getContext("2d"); // Background game board
+
+    let _ = {
+        // Tick game
+        tick: 0,
+
+        // Player score
+        score: 0,
+
+        // Hold the requestAnimationFrame
+        loopRequestAnim: null,
+
+        // 2D array of the game board
+        board: null,
+
+        // Settings of the game
+        settings: {
+            nb_mines: 10
+        }
+    };
+
+    // Number of tiles on x-axe
+    let columns = 9;
+
+    // Number of tiles on y-axe
+    let rows = 9;
+
 
     /*
      * Constants
@@ -84,53 +121,19 @@
     // Background color
     const BORDER_COLOR = COLORS.WHITE;
 
-    // Number of tiles on x-axe
-    const COLUMNS = 9;
-
-    // Number of tiles on y-axe
-    const ROWS = 9;
-
     // Size of tiles width (in px)
-    const TILE_SIZE = 40;
+    const TILE_SIZE = 32;
 
     // Border on a tile (in px)
-    const TILE_BORDER_SIZE = 1;
+    const TILE_BORDER_SIZE = 0;
 
     // Canvas info
     const CANVAS = {
         // Canvas width (in px)
-        WIDTH: COLUMNS * (TILE_SIZE + (2 * TILE_BORDER_SIZE)),
+        WIDTH: columns * (TILE_SIZE + (2 * TILE_BORDER_SIZE)),
 
         // Canvas height (in px)
-        HEIGHT: ROWS * (TILE_SIZE + (2 * TILE_BORDER_SIZE))
-    };
-
-
-    /*
-     * Globals letiables
-     */
-
-    let boardgame_canvas = document.getElementById("canvas_gameboard");
-
-    let boardgame = boardgame_canvas.getContext("2d"); // Background game board
-
-    let _ = {
-        // Tick game
-        tick: 0,
-
-        // Player score
-        score: 0,
-
-        // Hold the requestAnimationFrame
-        loopRequestAnim: null,
-
-        // 2D array of the game board
-        board: null,
-
-        // Settings of the game
-        settings: {
-            nb_mines: 0
-        }
+        HEIGHT: rows * (TILE_SIZE + (2 * TILE_BORDER_SIZE))
     };
 
 
@@ -138,14 +141,13 @@
      * Game engine
      */
 
-     let render = {
+    let render = {
 
         init: function() {
 
-            // Set boardgame canvas
-            boardgame_canvas.width = CANVAS.WIDTH;
-            boardgame_canvas.height = CANVAS.HEIGHT;
-
+            // Set gameboard canvas
+            gameboard_canvas.width = CANVAS.WIDTH;
+            gameboard_canvas.height = CANVAS.HEIGHT;
 
         },
 
@@ -155,26 +157,26 @@
             // @TODO Utiliser des images plutôt que des couleurs
 
             // Gameboard background
-            boardgame.fillStyle = BACKGROUND_COLOR;
-            boardgame.fillRect(0, 0, CANVAS.WIDTH, CANVAS.HEIGHT);
+            gameboard.fillStyle = BACKGROUND_COLOR;
+            gameboard.fillRect(0, 0, CANVAS.WIDTH, CANVAS.HEIGHT);
 
             // Gameboard grid
             if (TILE_BORDER_SIZE > 0) {
-                boardgame.strokeStyle = BORDER_COLOR;
-                boardgame.lineWidth = TILE_BORDER_SIZE;
+                gameboard.strokeStyle = BORDER_COLOR;
+                gameboard.lineWidth = TILE_BORDER_SIZE;
 
                 for (x = 0; x <= CANVAS.WIDTH; x += (TILE_SIZE + 2*TILE_BORDER_SIZE))
                 {
-                    boardgame.moveTo(x, 0);
-                    boardgame.lineTo(x, CANVAS.HEIGHT);
+                    gameboard.moveTo(x, 0);
+                    gameboard.lineTo(x, CANVAS.HEIGHT);
 
                     for (y = 0; y <= CANVAS.HEIGHT; y += (TILE_SIZE + 2*TILE_BORDER_SIZE))
                     {
-                        boardgame.moveTo(0, y);
-                        boardgame.lineTo(CANVAS.WIDTH, y);
+                        gameboard.moveTo(0, y);
+                        gameboard.lineTo(CANVAS.WIDTH, y);
                     }
                 }
-                boardgame.stroke();
+                gameboard.stroke();
             }
 
         },
@@ -183,9 +185,9 @@
         drawPieces: function() {
 
             // Draw landed tetriminos
-            for (let y = 0; y < ROWS; y++)
+            for (let y = 0; y < rows; y++)
             {
-                for (let x = 0; x < COLUMNS; x++)
+                for (let x = 0; x < columns; x++)
                 {
                     this.drawBlock(x, y, _.board[y][x]);
                 }
@@ -193,12 +195,23 @@
 
         },
 
+        // Draw an image
+        drawImage: function(name, x, y){
+
+            gameboard.drawImage(
+                assetmanager.get(name), // image url
+                x*TILE_SIZE + 2*x*TILE_BORDER_SIZE + TILE_BORDER_SIZE, // x-from
+                y*TILE_SIZE + 2*y*TILE_BORDER_SIZE + TILE_BORDER_SIZE // y-from
+            );
+
+        },
+
         // Draw a block (on the game board)
         drawBlock: function(x, y, cell) {
 
             // @TODO Sert juste comme point de repere mais doit être enlever à terme
-            boardgame.fillStyle = COLORS.GRAYLIGHT;
-            boardgame.fillRect(
+            gameboard.fillStyle = COLORS.GRAYLIGHT;
+            gameboard.fillRect(
                 x*TILE_SIZE + 2*x*TILE_BORDER_SIZE + TILE_BORDER_SIZE, // x-from
                 y*TILE_SIZE + 2*y*TILE_BORDER_SIZE + TILE_BORDER_SIZE, // y-from
                 TILE_SIZE, // width
@@ -209,20 +222,24 @@
             switch (cell.state) 
             {
                 case CELL_STATE.DISPLAYED:
-                    // @TODO Dessiner une case découverte
-                    // @TODO Afficher la mine (si -1)
-                    // @TODO Afficher le chiffre (si plus grand que 0)
+                    if (cell.solution == -1)
+                    {
+                        this.drawImage('mine', x, y);
+                    }
+                    else
+                    {
+                        var name = 'cell_' + cell.solution;
+                        this.drawImage(name, x, y);
+                    }
                     break;
                 case CELL_STATE.NOT_DISPLAYED:
-                    // @TODO Dessiner une case non découverte
+                    this.drawImage('undisplayed_cell', x, y);
                     break;
                 case CELL_STATE.MARKED_MINE:
-                    // @TODO Dessiner une case non découverte
-                    // @TODO + afficher une croix (image)
+                    this.drawImage('marked_cell', x, y);
                     break;
                 case CELL_STATE.QUESTION_MARK:
-                    // @TODO Dessiner une case non découverte
-                    // @TODO + afficher une mine (image)
+                    this.drawImage('question_mark_cell', x, y);
                     break;
             }
 
@@ -240,7 +257,7 @@
 
         // Restore the context
         restore: function(ctx) { return ctx.restore(); }
-     };
+    };
 
     /*
      * Game core
@@ -259,36 +276,88 @@
             // Generate the empty gameboard
             this.start();
 
-            render.drawBackground();
             this.loop();
 
         },
 
         start: function() {
-            // Generate empty board
-            _.board = [];
-            for (let y = 0; y < ROWS; y++)
-            {
-                _.board[y] = [];
-                for (let x = 0; x < COLUMNS; x++)
-                {
-                    _.board[y][x] = {
-                        solution: 0,
-                        state: CELL_STATE.NOT_DISPLAYED
-                    };
-                }
-            }
+            // @TODO Validations
+            // Vérifier si nb_mines > rows*columns
+
+
+            // Create the grid
+            _.board = this.createGrid();
 
             // Generate mines and numbers
-            for (let i = 0; i < _.settings.nb_mines; i++) 
-            {
-                // @TODO Placer les mines de manieres random   
-            }
+            this.generateMines();
 
             // Draw the board (only one time)
             render.drawPieces();
         },
 
+        //
+        createGrid: function() {
+            let board = [];
+            for (let y = 0; y < rows; y++)
+            {
+                board[y] = [];
+                for (let x = 0; x < columns; x++)
+                {
+                    board[y][x] = {
+                        solution: 0,
+                        state: CELL_STATE.NOT_DISPLAYED
+                    };
+                    render.drawBlock(x, y, board[y][x]);
+                }
+            }
+            return board;
+        },
+
+        // 
+        generateMines: function() {
+
+            for (let i = 0; i < _.settings.nb_mines; i++) 
+            {
+                console.log(i);
+
+                // Search an empty cell
+                while (true)
+                {
+                    var mine = {
+                        y: Math.floor(rand(0, rows)),
+                        x: Math.floor(rand(0, columns))
+                    }
+
+                    if (_.board[mine.y][mine.x].solution != -1)
+                    {
+                        console.log(mine);
+                        break;
+                    }
+                }
+
+                // Update the number on adjacentes cell
+                for (let j = -1; j <= 1; j++)
+                {
+                    for (let k = -1; k <= 1; k++)
+                    {
+                        if (j == 0 && k == 0)
+                        {
+                            _.board[mine.y][mine.x].solution = -1;
+                        }
+                        else if (_between(mine.y+k, [0, rows-1]) && _between(mine.x+j, [0, columns-1]))
+                        {
+                            if (_.board[mine.y + k][mine.x + j].solution >= 0)
+                            {
+                                _.board[mine.y + k][mine.x + j].solution++;
+                            }
+                        }
+                    }
+                } 
+            }
+
+        },
+
+        //
         loose: function() {
 
             // @TODO Vider les eventlistener
@@ -316,7 +385,7 @@
         // Draw everything on each loop (on the game board)
         draw: function() {
 
-            // boardgame.clearRect(0, 0, CANVAS.WIDTH, CANVAS.HEIGHT); // @TODO Clear the canvas only when needed
+            // gameboard.clearRect(0, 0, CANVAS.WIDTH, CANVAS.HEIGHT); // @TODO Clear the canvas only when needed
 
             // @TODO Animations (?)
             // render.processAnimations();
@@ -338,12 +407,18 @@
                 // If this is a mine
                 if (_.board[y][x].solution == -1)
                 {
+                    render.drawBlock(x, y, _.board[y][x]);
                     this.loose();
                 }
                 else
                 {
-                    // @TODO Si c'est une cell vide, afficher les cell directement adjacentes (récursif)
-                    // @TODO Afficher le chiffre
+                    render.drawBlock(x, y, _.board[y][x]);
+
+                    // If this is an empty cell, display adjacents cells
+                    if(_.board[y][x].solution == 0)
+                    {
+                        // @TODO Si c'est une cell vide, afficher les cell directement adjacentes (récursif)
+                    }
                 }
             }
 
@@ -362,16 +437,17 @@
                 {
                     case CELL_STATE.NOT_DISPLAYED:
                         _.board[y][x].state = CELL_STATE.MARKED_MINE;
+                        render.drawBlock(x, y, _.board[y][x]);
                         break;
                     case CELL_STATE.MARKED_MINE:
                         _.board[y][x].state = CELL_STATE.QUESTION_MARK;
+                        render.drawBlock(x, y, _.board[y][x]);
                         break;
                     case CELL_STATE.QUESTION_MARK:
                         _.board[y][x].state = CELL_STATE.NOT_DISPLAYED;
+                        render.drawBlock(x, y, _.board[y][x]);
                         break;
                 }
-
-                // @TODO Update visuellement la cell
             }
 
         },
@@ -387,17 +463,146 @@
         }
     };
 
+
+    /*
+     * Assets managers
+     */
+
+    const assets = [
+        {
+            name: 'cell_0',
+            path: 'assets/img/cell_0.jpg'
+        },
+        {
+            name: 'cell_1',
+            path: 'assets/img/cell_1.jpg'
+        },
+        {
+            name: 'cell_2',
+            path: 'assets/img/cell_2.jpg'
+        },
+        {
+            name: 'cell_3',
+            path: 'assets/img/cell_3.jpg'
+        },
+        {
+            name: 'cell_4',
+            path: 'assets/img/cell_4.jpg'
+        },
+        {
+            name: 'cell_5',
+            path: 'assets/img/cell_5.jpg'
+        },
+        {
+            name: 'cell_6',
+            path: 'assets/img/cell_6.jpg'
+        },
+        {
+            name: 'cell_7',
+            path: 'assets/img/cell_7.jpg'
+        },
+        {
+            name: 'cell_8',
+            path: 'assets/img/cell_8.jpg'
+        },
+        {
+            name: 'marked_cell',
+            path: 'assets/img/marked_cell.jpg'
+        },
+        {
+            name: 'mine',
+            path: 'assets/img/mine.jpg'
+        },
+        {
+            name: 'question_mark_cell',
+            path: 'assets/img/question_mark_cell.jpg'
+        },
+        {
+            name: 'undisplayed_cell',
+            path: 'assets/img/undisplayed_cell.jpg'
+        }
+    ];
+
+    let assetmanager = {
+
+        queue: [],
+
+        cache: {},
+
+        count: {
+            assetloaded: 0
+        },
+
+        init: function(callback) {
+
+            this.callback = callback;
+
+            for (let key in assets)
+            {
+                this.add(assets[key].name, assets[key].path);
+            }
+
+            this.downloadQueue(callback);
+
+        },
+
+        downloadQueue: function (callback) {
+
+            for (let i = 0; i < this.queue.length; i++) 
+            {
+                let img = new Image();
+                img.assetName = this.queue[i].name;
+                img.assetmanager = this;
+                img.callback = callback;
+                img.addEventListener('load', this.onLoadSuccess);
+                img.addEventListener('error', this.onLoadError);
+                img.src = this.queue[i].path;
+            }
+
+        },
+
+        onLoadSuccess: function() {
+
+            this.assetmanager.count.assetloaded++;
+            this.assetmanager.cache[this.assetName] = this;
+
+            if (this.assetmanager.queue.length == this.assetmanager.count.assetloaded) 
+            {
+                this.callback();
+            }
+
+        },
+
+        onLoadError: function() {
+
+        },
+
+        add: function(name, path) {
+
+            return this.queue.push({name: name, path: path});
+
+        },
+
+        get: function(name) {
+
+            return this.cache[name];
+
+        }
+
+    };
+
+
     /*
      * Events listeners
      */
 
     // Prevent right click on canvas
-    boardgame_canvas.addEventListener("contextmenu", function(event) {
+    gameboard_canvas.addEventListener("contextmenu", function(event) {
         event.preventDefault();
         return false;
     });
 
-    boardgame_canvas.addEventListener("mousedown", function(event) {
+    gameboard_canvas.addEventListener("mousedown", function(event) {
         event.preventDefault();
         if (event.which == KEY.MOUSE_LEFT) {
             game.leftClick(event.offsetX, event.offsetY);
@@ -407,6 +612,9 @@
     });
 
     // Run the game
-    game.run();
+    // game.run();
+    assetmanager.init(function() {
+        game.run();
+    });
 
 })();

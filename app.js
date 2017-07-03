@@ -508,7 +508,8 @@
         cache: {},
 
         count: {
-            assetloaded: 0
+            assetLoadSuccess: 0,
+            assetLoadError: 0
         },
 
         init: function(callback) {
@@ -541,10 +542,10 @@
 
         onLoadSuccess: function() {
 
-            this.assetmanager.count.assetloaded++;
+            this.assetmanager.count.assetLoadSuccess++;
             this.assetmanager.cache[this.assetName] = this;
 
-            if (this.assetmanager.queue.length == this.assetmanager.count.assetloaded) 
+            if (this.assetmanager.queue.length == this.assetmanager.count.assetLoadSuccess + this.assetmanager.count.assetLoadError) 
             {
                 this.callback();
             }
@@ -552,6 +553,8 @@
         },
 
         onLoadError: function() {
+
+            this.count.assetLoadError++;
 
         },
 

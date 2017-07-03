@@ -307,6 +307,12 @@ let game = {
 
         evtlstmanager.reset();
 
+
+        // @TODO Afficher une popup pour afficher le gameover et proposer de rejouer
+        setTimeout(function() {
+            game.run();
+        }, 5000);
+
     },
 
     // Loop function (on each frame)

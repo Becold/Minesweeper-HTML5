@@ -52,10 +52,10 @@
     };
 
     // Number of tiles on x-axe
-    let columns = 9;
+    let columns = 10;
 
     // Number of tiles on y-axe
-    let rows = 9;
+    let rows = 10;
 
 
     /*
@@ -66,26 +66,6 @@
     const KEY = {
         MOUSE_LEFT: 1,
         MOUSE_RIGHT: 3
-    }
-
-    // Blocks colors
-    const COLORS = {
-        EMPTY: -1,
-        GRAYLIGHT: "#adb5bd",
-        GRAY: "#343a40",
-        RED: "#e03131",
-        PINK: "#c2255c",
-        PURPLE: "#9c36b5",
-        VIOLET: "#6741d9",
-        INDIGO: "#3b5bdb",
-        BLUE: "#1b6ec2",
-        CYAN: "#0c8599",
-        TEAL: "#099268",
-        GREEN: "#2f9e44",
-        LIME: "#66a80f",
-        YELLOW: "#f08c00",
-        ORANGE: "#e8590c",
-        WHITE: "#ffffff"
     }
 
     // Difficulty pressets
@@ -116,10 +96,7 @@
     }
 
     // Background color
-    const BACKGROUND_COLOR = COLORS.GRAYLIGHT;
-
-    // Background color
-    const BORDER_COLOR = COLORS.WHITE;
+    const BORDER_COLOR = "#000";
 
     // Size of tiles width (in px)
     const TILE_SIZE = 32;
@@ -154,12 +131,6 @@
         // Draw the background
         drawBackground: function() {
 
-            // @TODO Utiliser des images plutôt que des couleurs
-
-            // Gameboard background
-            gameboard.fillStyle = BACKGROUND_COLOR;
-            gameboard.fillRect(0, 0, CANVAS.WIDTH, CANVAS.HEIGHT);
-
             // Gameboard grid
             if (TILE_BORDER_SIZE > 0) {
                 gameboard.strokeStyle = BORDER_COLOR;
@@ -189,7 +160,7 @@
             {
                 for (let x = 0; x < columns; x++)
                 {
-                    this.drawBlock(x, y, _.board[y][x]);
+                    this.drawCell(_.board[y][x]);
                 }
             }
 
@@ -199,7 +170,7 @@
         drawImage: function(name, x, y){
 
             gameboard.drawImage(
-                assetmanager.get(name), // image url
+                assetmanager.get(name), // image
                 x*TILE_SIZE + 2*x*TILE_BORDER_SIZE + TILE_BORDER_SIZE, // x-from
                 y*TILE_SIZE + 2*y*TILE_BORDER_SIZE + TILE_BORDER_SIZE // y-from
             );
@@ -207,16 +178,7 @@
         },
 
         // Draw a block (on the game board)
-        drawBlock: function(x, y, cell) {
-
-            // @TODO Sert juste comme point de repere mais doit être enlever à terme
-            gameboard.fillStyle = COLORS.GRAYLIGHT;
-            gameboard.fillRect(
-                x*TILE_SIZE + 2*x*TILE_BORDER_SIZE + TILE_BORDER_SIZE, // x-from
-                y*TILE_SIZE + 2*y*TILE_BORDER_SIZE + TILE_BORDER_SIZE, // y-from
-                TILE_SIZE, // width
-                TILE_SIZE  // height
-            );
+        drawCell: function(cell) {
 
             // Draw the cell based on his state
             switch (cell.state) 
@@ -224,31 +186,24 @@
                 case CELL_STATE.DISPLAYED:
                     if (cell.solution == -1)
                     {
-                        this.drawImage('mine', x, y);
+                        this.drawImage('mine', cell.x, cell.y);
                     }
                     else
                     {
-                        var name = 'cell_' + cell.solution;
-                        this.drawImage(name, x, y);
+                        let name = 'cell_' + cell.solution;
+                        this.drawImage(name, cell.x, cell.y);
                     }
                     break;
                 case CELL_STATE.NOT_DISPLAYED:
-                    this.drawImage('undisplayed_cell', x, y);
+                    this.drawImage('undisplayed_cell', cell.x, cell.y);
                     break;
                 case CELL_STATE.MARKED_MINE:
-                    this.drawImage('marked_cell', x, y);
+                    this.drawImage('marked_cell', cell.x, cell.y);
                     break;
                 case CELL_STATE.QUESTION_MARK:
-                    this.drawImage('question_mark_cell', x, y);
+                    this.drawImage('question_mark_cell', cell.x, cell.y);
                     break;
             }
-
-        },
-
-        drawCell: function(x, y, state) {
-
-            // @TODO Permet de dessiner la CELL_STATE d'une cellule
-            // @TODO Si c'est un chiffre, afficher le chiffre
 
         },
 
@@ -284,7 +239,6 @@
             // @TODO Validations
             // Vérifier si nb_mines > rows*columns
 
-
             // Create the grid
             _.board = this.createGrid();
 
@@ -304,10 +258,12 @@
                 for (let x = 0; x < columns; x++)
                 {
                     board[y][x] = {
+                        x: x,
+                        y: y,
                         solution: 0,
                         state: CELL_STATE.NOT_DISPLAYED
                     };
-                    render.drawBlock(x, y, board[y][x]);
+                    render.drawCell(board[y][x]);
                 }
             }
             return board;
@@ -316,45 +272,33 @@
         // 
         generateMines: function() {
 
+            let mine;
+
             for (let i = 0; i < _.settings.nb_mines; i++) 
             {
-                console.log(i);
-
                 // Search an empty cell
                 while (true)
                 {
-                    var mine = {
+                    mine = {
                         y: Math.floor(rand(0, rows)),
                         x: Math.floor(rand(0, columns))
                     }
 
                     if (_.board[mine.y][mine.x].solution != -1)
                     {
-                        console.log(mine);
                         break;
                     }
                 }
 
                 // Update the number on adjacentes cell
-                for (let j = -1; j <= 1; j++)
-                {
-                    for (let k = -1; k <= 1; k++)
+                this.getAdjacentsCells(mine.x, mine.y).forEach(function (cellAdj) {
+                    if (cellAdj.solution >= 0)
                     {
-                        if (j == 0 && k == 0)
-                        {
-                            _.board[mine.y][mine.x].solution = -1;
-                        }
-                        else if (_between(mine.y+k, [0, rows-1]) && _between(mine.x+j, [0, columns-1]))
-                        {
-                            if (_.board[mine.y + k][mine.x + j].solution >= 0)
-                            {
-                                _.board[mine.y + k][mine.x + j].solution++;
-                            }
-                        }
+                        cellAdj.solution++;
                     }
-                } 
+                });
+                _.board[mine.y][mine.x].solution = -1;
             }
-
         },
 
         //
@@ -407,17 +351,34 @@
                 // If this is a mine
                 if (_.board[y][x].solution == -1)
                 {
-                    render.drawBlock(x, y, _.board[y][x]);
+                    render.drawCell(_.board[y][x]);
                     this.loose();
                 }
                 else
                 {
-                    render.drawBlock(x, y, _.board[y][x]);
+                    render.drawCell(_.board[y][x]);
 
                     // If this is an empty cell, display adjacents cells
                     if(_.board[y][x].solution == 0)
                     {
-                        // @TODO Si c'est une cell vide, afficher les cell directement adjacentes (récursif)
+                        let cells = [_.board[y][x]];
+
+                        while (cells.length != 0)
+                        {
+                            let self = this;
+                            let newCells = [];
+                            cells.forEach(function (cell) {
+                                self.getAdjacentsCells(cell.x, cell.y).forEach(function (cellAdj) {
+                                    if (cellAdj.solution == 0 && cellAdj.state == CELL_STATE.NOT_DISPLAYED)
+                                    {
+                                        newCells.push(cellAdj);
+                                    }
+                                    cellAdj.state = CELL_STATE.DISPLAYED;
+                                    render.drawCell(cellAdj);
+                                });
+                                cells = newCells;
+                            });
+                        }
                     }
                 }
             }
@@ -437,15 +398,15 @@
                 {
                     case CELL_STATE.NOT_DISPLAYED:
                         _.board[y][x].state = CELL_STATE.MARKED_MINE;
-                        render.drawBlock(x, y, _.board[y][x]);
+                        render.drawCell(_.board[y][x]);
                         break;
                     case CELL_STATE.MARKED_MINE:
                         _.board[y][x].state = CELL_STATE.QUESTION_MARK;
-                        render.drawBlock(x, y, _.board[y][x]);
+                        render.drawCell(_.board[y][x]);
                         break;
                     case CELL_STATE.QUESTION_MARK:
                         _.board[y][x].state = CELL_STATE.NOT_DISPLAYED;
-                        render.drawBlock(x, y, _.board[y][x]);
+                        render.drawCell(_.board[y][x]);
                         break;
                 }
             }
@@ -460,7 +421,24 @@
                 y: Math.floor(posY / (TILE_SIZE + 2 * TILE_BORDER_SIZE)),
             }
 
-        }
+        },
+
+        getAdjacentsCells: function(posX, posY) {
+
+            let cells = [];
+            for (let j = -1; j <= 1; j++)
+            {
+                for (let k = -1; k <= 1; k++)
+                {
+                    if (_between(posY+k, [0, rows-1]) && _between(posX+j, [0, columns-1]))
+                    {
+                        cells.push(_.board[posY + k][posX + j]);
+                    }
+                }
+            } 
+            return cells;
+
+        },
     };
 
 

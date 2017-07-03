@@ -225,6 +225,8 @@ let game = {
 
     // Game initialization
     run: function() {
+        // Setup eventlisteners
+        evtlstmanager.init();
 
         // Game engine initisialization
         render.init();
@@ -626,8 +628,6 @@ let evtlstmanager = {
 };
 
 (function() {
-    evtlstmanager.init();
-
     // Load assets
     assetmanager.init(function() {
         // Run the game

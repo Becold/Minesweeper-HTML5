@@ -220,9 +220,6 @@ let render = {
  */
 
 let game = {
-    // Current game state
-    state: null,
-
     // Game initialization
     run: function() {
         // Setup eventlisteners

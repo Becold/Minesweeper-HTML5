@@ -20,7 +20,7 @@ window.requestAnimationFrame =
 // @return float Random number between min and max
 function rand(min, max) { return (Math.random() * (max - min) + min); }
 
-// @return boolean Return true if a and b is 
+// @return boolean Return true if a and b is
 function _between(value, range) { return (value >= range[0]) && (value <= range[1]); }
 
 
@@ -182,7 +182,7 @@ let render = {
     drawCell: function(cell) {
 
         // Draw the cell based on his state
-        switch (cell.state) 
+        switch (cell.state)
         {
             case CELL_STATE.DISPLAYED:
                 if (cell.solution == -1)
@@ -272,12 +272,12 @@ let game = {
         return board;
     },
 
-    // 
+    //
     generateMines: function() {
 
         let mine;
 
-        for (let i = 0; i < _.settings.nb_mines; i++) 
+        for (let i = 0; i < _.settings.nb_mines; i++)
         {
             // Search an empty cell
             while (true)
@@ -309,11 +309,14 @@ let game = {
 
         evtlstmanager.reset();
 
-
-        // @TODO Afficher une popup pour afficher le gameover et proposer de rejouer
+        // Affiche une alert en cas de défaite
         setTimeout(function() {
-            game.run();
-        }, 5000);
+	        let resultat = confirm("Vous avez perdu! Souhaitez-vous rejouer une partie?");
+	        if(resultat)
+	        {
+	            game.run();
+	        }
+        }, 100);
 
     },
 
@@ -328,7 +331,7 @@ let game = {
 
     },
 
-    // Update the game board  on each loop
+    // Update the game board on each loop
     update: function() {
 
         // @TODO Process logic
@@ -345,7 +348,7 @@ let game = {
 
     },
 
-    // 
+    //
     leftClick: function(posX, posY) {
 
         let coord = this.getCellsCoord(posX, posY);
@@ -394,7 +397,7 @@ let game = {
 
     },
 
-    // 
+    //
     rightClick: function(posX, posY) {
 
         let coord = this.getCellsCoord(posX, posY);
@@ -444,7 +447,7 @@ let game = {
                     cells.push(_.board[posY + k][posX + j]);
                 }
             }
-        } 
+        }
         return cells;
 
     },
@@ -536,7 +539,7 @@ let assetmanager = {
 
     downloadQueue: function (callback) {
 
-        for (let i = 0; i < this.queue.length; i++) 
+        for (let i = 0; i < this.queue.length; i++)
         {
             let img = new Image();
             img.assetName = this.queue[i].name;
@@ -554,7 +557,7 @@ let assetmanager = {
         this.assetmanager.count.assetLoadSuccess++;
         this.assetmanager.cache[this.assetName] = this;
 
-        if (this.assetmanager.queue.length == this.assetmanager.count.assetLoadSuccess + this.assetmanager.count.assetLoadError) 
+        if (this.assetmanager.queue.length == this.assetmanager.count.assetLoadSuccess + this.assetmanager.count.assetLoadError)
         {
             this.callback();
         }

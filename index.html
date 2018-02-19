@@ -4,40 +4,56 @@
   <meta charset="UTF-8">
   <title>Minesweeper</title>
   <style>
-    #jeu {
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #ccc;
+    }
+
+    .wrapper {
       position: absolute;
       top: 40%;
       left: 50%;
       transform: translate(-50%, -50%);
     }
 
-    #jeu #gameboard {
-      float: left;
-      position: relative;
+    .hud
+    {
+      display: flex;
+      justify-content: space-between;
     }
 
-    #jeu #gameboard #board-game {
-      position: absolute;
+    .hud .section
+    {
+      width: 49%;
+      border-radius: 3px;
+      background-color: #aaa;
+      border: 1px solid #eee;
+      padding: 5px 20px 15px 5px;
     }
 
-    #jeu #options {
-      float: left;
-      border: 1px solid black;
-      width: 250px;
-      margin-left: 8px;
-      padding: 5px;
+    .wrapper .settings {
+      border-radius: 3px;
+      background-color: #aaa;
+      border: 1px solid #eee;
+      padding: 5px 20px;
     }
 
-    .options-subtitle {
-      font-weight: bold;
+    .section .subtitle {
+      display: block;
+      font-weight: bolder;
     }
 
-    .options-size {
+    .settings-size {
       width: 40px;
     }
 
-    #settings-button {
+    .settings-button {
       display: block;
+      border-radius: 5px;
       margin: auto;
       margin-top: 20px;
       background-color: green;
@@ -54,24 +70,34 @@
   </style>
 </head>
 <body>
-  <div id="jeu">
-      <div id="gameboard">
-        <canvas id="canvas_gameboard"></canvas>
+  <div class="wrapper">
+      <div class="gameboard">
+        <canvas class="gameboard_canvas" id="gameboard_canvas"></canvas>
       </div>
 
-      <div id="options">
-        <div>
-          <span class="options-subtitle">Difficulty:</span><br />
-          <input type="radio" name="difficulty" id="easy" value="easy" /><label for="easy">Easy</label>
-          <input type="radio" name="difficulty" id="medium" value="medium" /><label for="medium">Medium</label>
-          <input type="radio" name="difficulty" id="hard" value="hard" /><label for="hard">Hard</label>
+      <div class="hud">
+        <div class="section settings">
+          <div>
+            <span class="subtitle">Difficulté:</span>
+            <input type="radio" name="difficulty" id="easy" value="easy" /><label for="easy">Facile</label>
+            <input type="radio" name="difficulty" id="medium" value="medium" /><label for="medium">Intermédiaire</label>
+            <input type="radio" name="difficulty" id="hard" value="hard" /><label for="hard">Difficile</label>
+          </div>
+
+          <div>
+            <span class="subtitle">Paramètres de la partie:</span>
+            <span>Nombre de mines:</span> <input type="number" name="nb_mines" value="10" /><br>
+            <span>Taille du plateau:</span> <input type="number" class="settings-size" name="height" value="9" /> x <input type="number" class="settings-size" name="width" value="9" /><br>
+            <button class="settings-button" id="btn_generate">Générer</button>
+          </div>
         </div>
 
-        <div>
-          <span class="options-subtitle">Settings:</span><br />
-          <span>Nb Mines:</span> <input type="number" name="nb_mines" value="10" /><br />
-          <span>Taille:</span> <input type="number" class="options-size" name="height" value="9" /> x <input type="number" class="options-size" name="width" value="9" /><br />
-          <button id="settings-button" name="generate">Générer</button>
+        <div class="section statistics">
+          <div>
+            <span class="subtitle">Statistics:</span>
+            <span>Nombre de cases dévoilées: </span> <span id="_nb_discovered_cells">0</span><br>
+            <span>Nombre de drapeaux placés: </span> <span id="_nb_flags">0</span><br>
+          </div>
         </div>
       </div>
   </div>

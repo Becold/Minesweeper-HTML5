@@ -28,7 +28,7 @@ function _between(value, range) { return (value >= range[0]) && (value <= range[
  * Globals variables
  */
 
-let gameboard_canvas = document.getElementById("canvas_gameboard");
+let gameboard_canvas = document.getElementById("gameboard_canvas");
 
 let gameboard = gameboard_canvas.getContext("2d"); // Background game board
 
@@ -37,7 +37,10 @@ let _ = {
     tick: 0,
 
     // Player score
-    score: 0,
+    score: {
+    	nb_discovered_cells: 0,
+    	nb_flags: 0
+    },
 
     // Hold the requestAnimationFrame
     loopRequestAnim: null,
@@ -53,10 +56,10 @@ let _ = {
 };
 
 // Number of tiles on x-axe
-let columns = 10;
+let columns = 30;
 
 // Number of tiles on y-axe
-let rows = 10;
+let rows = 16;
 
 
 /*
@@ -120,6 +123,24 @@ const CANVAS = {
  */
 
 let render = {
+
+	hud: {
+
+		updateNbDiscoveredMines: function(value) {
+
+			_.score.nb_discovered_cells = value === 0 ? 0 : Number(document.getElementById('_nb_discovered_cells').innerHTML) + value;
+			document.getElementById('_nb_discovered_cells').innerHTML = _.score.nb_discovered_cells;
+
+		},
+
+		updateNbFlags: function(value) {
+
+			_.score.nb_flags = value === 0 ? 0 : Number(document.getElementById('_nb_flags').innerHTML) + value;
+			document.getElementById('_nb_flags').innerHTML = _.score.nb_flags;
+
+		}
+
+	},
 
     init: function() {
 
@@ -220,6 +241,9 @@ let render = {
  */
 
 let game = {
+    // Current game state
+    state: null,
+
     // Game initialization
     run: function() {
         // Setup eventlisteners
@@ -238,6 +262,10 @@ let game = {
     start: function() {
         // @TODO Validations
         // Vérifier si nb_mines > rows*columns
+
+        // Reset score
+		render.hud.updateNbFlags(0);
+		render.hud.updateNbDiscoveredMines(0);
 
         // Create the grid
         _.board = this.createGrid();
@@ -384,6 +412,7 @@ let game = {
                                 }
                                 cellAdj.state = CELL_STATE.DISPLAYED;
                                 render.drawCell(cellAdj);
+                                render.hud.updateNbDiscoveredMines(1);
                             });
                             cells = newCells;
                         });
@@ -408,10 +437,12 @@ let game = {
                 case CELL_STATE.NOT_DISPLAYED:
                     _.board[y][x].state = CELL_STATE.MARKED_MINE;
                     render.drawCell(_.board[y][x]);
+                    render.hud.updateNbFlags(1);
                     break;
                 case CELL_STATE.MARKED_MINE:
                     _.board[y][x].state = CELL_STATE.QUESTION_MARK;
                     render.drawCell(_.board[y][x]);
+                    render.hud.updateNbFlags(-1);
                     break;
                 case CELL_STATE.QUESTION_MARK:
                     _.board[y][x].state = CELL_STATE.NOT_DISPLAYED;

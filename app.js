@@ -329,20 +329,29 @@ let game = {
         }
     },
 
-    //
-    loose: function() {
+    end: function(mot) {
 
         evtlstmanager.reset();
 
         // Affiche une alert en cas de défaite
         setTimeout(function() {
-	        let resultat = confirm("Vous avez perdu! Souhaitez-vous rejouer une partie?");
+	        let resultat = confirm("Vous avez " + mot + "! Souhaitez-vous rejouer une partie?");
 	        if(resultat)
 	        {
 	            game.run();
 	        }
         }, 100);
 
+    },
+
+    //
+    loose: function() {
+    	this.end("perdu");
+    },
+
+    //
+    win: function() {
+    	this.end("gagné");
     },
 
     // Loop function (on each frame)
@@ -406,6 +415,11 @@ let game = {
                         let newCells = [];
                         cells.forEach(function (cell) {
                             self.getAdjacentsCells(cell.x, cell.y).forEach(function (cellAdj) {
+                            	if (cellAdj.state == CELL_STATE.MARKED_MINE || cellAdj.state == CELL_STATE.QUESTION_MARK)
+                            	{
+                            		return;
+                            	}
+
                                 if (cellAdj.solution == 0 && cellAdj.state == CELL_STATE.NOT_DISPLAYED)
                                 {
                                     newCells.push(cellAdj);

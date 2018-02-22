@@ -119,24 +119,45 @@ var render = {
     hud: {
 
         updateNbDiscoveredCells: function(value) {
-            value = Number(document.getElementById("_nb_discovered_cells").innerHTML) + value;
-            value = value <= 0 ? 0 : value;
+            if (value != 0)
+            {
+                value = Number(document.getElementById("_nb_discovered_cells").innerHTML) + value;
+                value = value <= 0 ? 0 : value;
+            }
+            else
+            {
+                value = 0;
+            }
 
             _.score.nb_discovered_cells = value;
             document.getElementById("_nb_discovered_cells").innerHTML = _.score.nb_discovered_cells;
         },
 
         updateNbFlags: function(value) {
-            value = Number(document.getElementById("_nb_flags").innerHTML) + value;
-            value = value <= 0 ? 0 : value;
+            if (value != 0)
+            {
+                value = Number(document.getElementById("_nb_flags").innerHTML) + value;
+                value = value <= 0 ? 0 : value;
+            }
+            else
+            {
+                value = 0;
+            }
 
             _.score.nb_flags = value;
             document.getElementById("_nb_flags").innerHTML = _.score.nb_flags;
         },
 
         updateNbMarkedMines: function(value) {
-            value = Number(document.getElementById("_nb_marked_mines").innerHTML) + value;
-            value = value <= 0 ? 0 : value;
+            if (value != 0)
+            {
+                value = Number(document.getElementById("_nb_marked_mines").innerHTML) + value;
+                value = value <= 0 ? 0 : value;
+            }
+            else
+            {
+                value = 0;
+            }
 
             _.score.nb_marked_mine = value;
             document.getElementById("_nb_marked_mines").innerHTML = _.score.nb_marked_mine;
@@ -234,6 +255,7 @@ var game = {
         // Reset score
         render.hud.updateNbFlags(0);
         render.hud.updateNbDiscoveredCells(0);
+        render.hud.updateNbMarkedMines(0);
 
         // Create the grid
         _.board = this.createGrid();

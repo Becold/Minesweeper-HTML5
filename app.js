@@ -28,18 +28,18 @@ function _between(value, range) { return (value >= range[0]) && (value <= range[
  * Globals variables
  */
 
-let gameboard_canvas = document.getElementById("gameboard_canvas");
+var gameboard_canvas = document.getElementById("gameboard_canvas");
 
-let gameboard = gameboard_canvas.getContext("2d"); // Background game board
+var gameboard = gameboard_canvas.getContext("2d"); // Background game board
 
-let _ = {
+var _ = {
     // Tick game
     tick: 0,
 
     // Player score
     score: {
-    	nb_discovered_cells: 0,
-    	nb_flags: 0
+        nb_discovered_cells: 0,
+        nb_flags: 0
     },
 
     // Hold the requestAnimationFrame
@@ -50,16 +50,16 @@ let _ = {
 
     // Settings of the game
     settings: {
-        nb_mines: 10
-    },
+        nb_mines: 50
+    }
 
 };
 
 // Number of tiles on x-axe
-let columns = 30;
+var columns = 30;
 
 // Number of tiles on y-axe
-let rows = 16;
+var rows = 16;
 
 
 /*
@@ -67,13 +67,13 @@ let rows = 16;
  */
 
 // Keyboard key code
-const KEY = {
+var KEY = {
     MOUSE_LEFT: 1,
     MOUSE_RIGHT: 3
-}
+};
 
 // Difficulty pressets
-const DIFFICULTIES = {
+var DIFFICULTIES = {
     EASY: {
         NB_MINES: 10,
         WIDTH: 9,
@@ -89,27 +89,24 @@ const DIFFICULTIES = {
         WIDTH: 30,
         HEIGHT: 16
     }
-}
+};
 
 // Cell states
-const CELL_STATE = {
+var CELL_STATE = {
     DISPLAYED: 0,
     NOT_DISPLAYED: 1,
     MARKED_MINE: 2,
     QUESTION_MARK: 3
-}
-
-// Background color
-const BORDER_COLOR = "#000";
+};
 
 // Size of tiles width (in px)
-const TILE_SIZE = 32;
+var TILE_SIZE = 32;
 
 // Border on a tile (in px)
-const TILE_BORDER_SIZE = 0;
+var TILE_BORDER_SIZE = 0;
 
 // Canvas info
-const CANVAS = {
+var CANVAS = {
     // Canvas width (in px)
     WIDTH: columns * (TILE_SIZE + (2 * TILE_BORDER_SIZE)),
 
@@ -122,25 +119,25 @@ const CANVAS = {
  * Game engine
  */
 
-let render = {
+var render = {
 
-	hud: {
+    hud: {
 
-		updateNbDiscoveredMines: function(value) {
+        updateNbDiscoveredMines: function(value) {
 
-			_.score.nb_discovered_cells = value === 0 ? 0 : Number(document.getElementById('_nb_discovered_cells').innerHTML) + value;
-			document.getElementById('_nb_discovered_cells').innerHTML = _.score.nb_discovered_cells;
+            _.score.nb_discovered_cells = value === 0 ? 0 : Number(document.getElementById("_nb_discovered_cells").innerHTML) + value;
+            document.getElementById("_nb_discovered_cells").innerHTML = _.score.nb_discovered_cells;
 
-		},
+        },
 
-		updateNbFlags: function(value) {
+        updateNbFlags: function(value) {
 
-			_.score.nb_flags = value === 0 ? 0 : Number(document.getElementById('_nb_flags').innerHTML) + value;
-			document.getElementById('_nb_flags').innerHTML = _.score.nb_flags;
+            _.score.nb_flags = value === 0 ? 0 : Number(document.getElementById("_nb_flags").innerHTML) + value;
+            document.getElementById("_nb_flags").innerHTML = _.score.nb_flags;
 
-		}
+        }
 
-	},
+    },
 
     init: function() {
 
@@ -150,41 +147,41 @@ let render = {
 
     },
 
-    // Draw the background
-    drawBackground: function() {
+    // Draw all cells (on the game board)
+    drawCells: function() {
 
-        // Gameboard grid
-        if (TILE_BORDER_SIZE > 0) {
-            gameboard.strokeStyle = BORDER_COLOR;
-            gameboard.lineWidth = TILE_BORDER_SIZE;
-
-            for (x = 0; x <= CANVAS.WIDTH; x += (TILE_SIZE + 2*TILE_BORDER_SIZE))
-            {
-                gameboard.moveTo(x, 0);
-                gameboard.lineTo(x, CANVAS.HEIGHT);
-
-                for (y = 0; y <= CANVAS.HEIGHT; y += (TILE_SIZE + 2*TILE_BORDER_SIZE))
-                {
-                    gameboard.moveTo(0, y);
-                    gameboard.lineTo(CANVAS.WIDTH, y);
-                }
-            }
-            gameboard.stroke();
-        }
-
-    },
-
-    // Draw tetriminos (on the game board)
-    drawPieces: function() {
-
-        // Draw landed tetriminos
-        for (let y = 0; y < rows; y++)
+        for (var y = 0; y < rows; y++)
         {
-            for (let x = 0; x < columns; x++)
+            for (var x = 0; x < columns; x++)
             {
                 this.drawCell(_.board[y][x]);
             }
         }
+
+    },
+
+    // Draw a cell (on the game board)
+    drawCell: function(cell) {
+
+        var image_path = "undisplayed_cell";
+        // Draw the cell based on his state
+        switch (cell.state)
+        {
+            case CELL_STATE.DISPLAYED:
+                image_path = (cell.solution == -1) ? "mine" : "cell_" + cell.solution;
+                break;
+            case CELL_STATE.NOT_DISPLAYED:
+                image_path = "undisplayed_cell";
+                break;
+            case CELL_STATE.MARKED_MINE:
+                image_path = "marked_cell";
+                break;
+            case CELL_STATE.QUESTION_MARK:
+                image_path = "question_mark_cell";
+                break;
+        }
+
+        this.drawImage(image_path, cell.x, cell.y);
 
     },
 
@@ -197,50 +194,15 @@ let render = {
             y*TILE_SIZE + 2*y*TILE_BORDER_SIZE + TILE_BORDER_SIZE // y-from
         );
 
-    },
+    }
 
-    // Draw a block (on the game board)
-    drawCell: function(cell) {
-
-        // Draw the cell based on his state
-        switch (cell.state)
-        {
-            case CELL_STATE.DISPLAYED:
-                if (cell.solution == -1)
-                {
-                    this.drawImage('mine', cell.x, cell.y);
-                }
-                else
-                {
-                    let name = 'cell_' + cell.solution;
-                    this.drawImage(name, cell.x, cell.y);
-                }
-                break;
-            case CELL_STATE.NOT_DISPLAYED:
-                this.drawImage('undisplayed_cell', cell.x, cell.y);
-                break;
-            case CELL_STATE.MARKED_MINE:
-                this.drawImage('marked_cell', cell.x, cell.y);
-                break;
-            case CELL_STATE.QUESTION_MARK:
-                this.drawImage('question_mark_cell', cell.x, cell.y);
-                break;
-        }
-
-    },
-
-    // Save the context
-    save: function(ctx) { return ctx.save(); },
-
-    // Restore the context
-    restore: function(ctx) { return ctx.restore(); }
 };
 
 /*
  * Game core
  */
 
-let game = {
+var game = {
     // Current game state
     state: null,
 
@@ -255,6 +217,7 @@ let game = {
         // Generate the empty gameboard
         this.start();
 
+        // Run loop game
         this.loop();
 
     },
@@ -264,8 +227,8 @@ let game = {
         // Vérifier si nb_mines > rows*columns
 
         // Reset score
-		render.hud.updateNbFlags(0);
-		render.hud.updateNbDiscoveredMines(0);
+        render.hud.updateNbFlags(0);
+        render.hud.updateNbDiscoveredMines(0);
 
         // Create the grid
         _.board = this.createGrid();
@@ -274,16 +237,16 @@ let game = {
         this.generateMines();
 
         // Draw the board (only one time)
-        render.drawPieces();
+        render.drawCells();
     },
 
     //
     createGrid: function() {
-        let board = [];
-        for (let y = 0; y < rows; y++)
+        var board = [];
+        for (var y = 0; y < rows; y++)
         {
             board[y] = [];
-            for (let x = 0; x < columns; x++)
+            for (var x = 0; x < columns; x++)
             {
                 board[y][x] = {
                     x: x,
@@ -300,9 +263,9 @@ let game = {
     //
     generateMines: function() {
 
-        let mine;
+        var mine;
 
-        for (let i = 0; i < _.settings.nb_mines; i++)
+        for (var i = 0; i < _.settings.nb_mines; i++)
         {
             // Search an empty cell
             while (true)
@@ -310,7 +273,7 @@ let game = {
                 mine = {
                     y: Math.floor(rand(0, rows)),
                     x: Math.floor(rand(0, columns))
-                }
+                };
 
                 if (_.board[mine.y][mine.x].solution != -1)
                 {
@@ -335,23 +298,23 @@ let game = {
 
         // Affiche une alert en cas de défaite
         setTimeout(function() {
-	        let resultat = confirm("Vous avez " + mot + "! Souhaitez-vous rejouer une partie?");
-	        if(resultat)
-	        {
-	            game.run();
-	        }
+            var resultat = confirm("Vous avez " + mot + "! Souhaitez-vous rejouer une partie?");
+            if(resultat)
+            {
+                game.run();
+            }
         }, 100);
 
     },
 
     //
     loose: function() {
-    	this.end("perdu");
+        this.end("perdu");
     },
 
     //
     win: function() {
-    	this.end("gagné");
+        this.end("gagné");
     },
 
     // Loop function (on each frame)
@@ -385,9 +348,9 @@ let game = {
     //
     leftClick: function(posX, posY) {
 
-        let coord = this.getCellsCoord(posX, posY);
-        let y = coord.y;
-        let x = coord.x;
+        var coord = this.getCellsCoord(posX, posY);
+        var y = coord.y;
+        var x = coord.x;
 
         if (_.board[y][x].state != CELL_STATE.DISPLAYED &&
             _.board[y][x].state != CELL_STATE.MARKED_MINE)
@@ -405,22 +368,22 @@ let game = {
                 render.drawCell(_.board[y][x]);
 
                 // If this is an empty cell, display adjacents cells
-                if(_.board[y][x].solution == 0)
+                if(_.board[y][x].solution === 0)
                 {
-                    let cells = [_.board[y][x]];
+                    var cells = [_.board[y][x]];
 
-                    while (cells.length != 0)
+                    while (cells.length !== 0)
                     {
-                        let self = this;
-                        let newCells = [];
+                        var self = this;
+                        var newCells = [];
                         cells.forEach(function (cell) {
                             self.getAdjacentsCells(cell.x, cell.y).forEach(function (cellAdj) {
-                            	if (cellAdj.state == CELL_STATE.MARKED_MINE || cellAdj.state == CELL_STATE.QUESTION_MARK)
-                            	{
-                            		return;
-                            	}
+                                if (cellAdj.state == CELL_STATE.MARKED_MINE || cellAdj.state == CELL_STATE.QUESTION_MARK)
+                                {
+                                    return;
+                                }
 
-                                if (cellAdj.solution == 0 && cellAdj.state == CELL_STATE.NOT_DISPLAYED)
+                                if (cellAdj.solution === 0 && cellAdj.state == CELL_STATE.NOT_DISPLAYED)
                                 {
                                     newCells.push(cellAdj);
                                 }
@@ -440,9 +403,9 @@ let game = {
     //
     rightClick: function(posX, posY) {
 
-        let coord = this.getCellsCoord(posX, posY);
-        let y = coord.y;
-        let x = coord.x;
+        var coord = this.getCellsCoord(posX, posY);
+        var y = coord.y;
+        var x = coord.x;
 
         if (_.board[y][x].state != CELL_STATE.DISPLAYED)
         {
@@ -473,16 +436,16 @@ let game = {
         return {
             x: Math.floor(posX / (TILE_SIZE + 2 * TILE_BORDER_SIZE)),
             y: Math.floor(posY / (TILE_SIZE + 2 * TILE_BORDER_SIZE)),
-        }
+        };
 
     },
 
     getAdjacentsCells: function(posX, posY) {
 
-        let cells = [];
-        for (let j = -1; j <= 1; j++)
+        var cells = [];
+        for (var j = -1; j <= 1; j++)
         {
-            for (let k = -1; k <= 1; k++)
+            for (var k = -1; k <= 1; k++)
             {
                 if (_between(posY+k, [0, rows-1]) && _between(posX+j, [0, columns-1]))
                 {
@@ -500,62 +463,62 @@ let game = {
  * Assets managers
  */
 
-const assets = [
+var assets = [
     {
-        name: 'cell_0',
-        path: 'assets/img/cell_0.jpg'
+        name: "cell_0",
+        path: "assets/img/cell_0.jpg"
     },
     {
-        name: 'cell_1',
-        path: 'assets/img/cell_1.jpg'
+        name: "cell_1",
+        path: "assets/img/cell_1.jpg"
     },
     {
-        name: 'cell_2',
-        path: 'assets/img/cell_2.jpg'
+        name: "cell_2",
+        path: "assets/img/cell_2.jpg"
     },
     {
-        name: 'cell_3',
-        path: 'assets/img/cell_3.jpg'
+        name: "cell_3",
+        path: "assets/img/cell_3.jpg"
     },
     {
-        name: 'cell_4',
-        path: 'assets/img/cell_4.jpg'
+        name: "cell_4",
+        path: "assets/img/cell_4.jpg"
     },
     {
-        name: 'cell_5',
-        path: 'assets/img/cell_5.jpg'
+        name: "cell_5",
+        path: "assets/img/cell_5.jpg"
     },
     {
-        name: 'cell_6',
-        path: 'assets/img/cell_6.jpg'
+        name: "cell_6",
+        path: "assets/img/cell_6.jpg"
     },
     {
-        name: 'cell_7',
-        path: 'assets/img/cell_7.jpg'
+        name: "cell_7",
+        path: "assets/img/cell_7.jpg"
     },
     {
-        name: 'cell_8',
-        path: 'assets/img/cell_8.jpg'
+        name: "cell_8",
+        path: "assets/img/cell_8.jpg"
     },
     {
-        name: 'marked_cell',
-        path: 'assets/img/marked_cell.jpg'
+        name: "marked_cell",
+        path: "assets/img/marked_cell.jpg"
     },
     {
-        name: 'mine',
-        path: 'assets/img/mine.jpg'
+        name: "mine",
+        path: "assets/img/mine.jpg"
     },
     {
-        name: 'question_mark_cell',
-        path: 'assets/img/question_mark_cell.jpg'
+        name: "question_mark_cell",
+        path: "assets/img/question_mark_cell.jpg"
     },
     {
-        name: 'undisplayed_cell',
-        path: 'assets/img/undisplayed_cell.jpg'
+        name: "undisplayed_cell",
+        path: "assets/img/undisplayed_cell.jpg"
     }
 ];
 
-let assetmanager = {
+var assetmanager = {
 
     queue: [],
 
@@ -570,7 +533,7 @@ let assetmanager = {
 
         this.callback = callback;
 
-        for (let key in assets)
+        for (var key in assets)
         {
             this.add(assets[key].name, assets[key].path);
         }
@@ -581,14 +544,14 @@ let assetmanager = {
 
     downloadQueue: function (callback) {
 
-        for (let i = 0; i < this.queue.length; i++)
+        for (var i = 0; i < this.queue.length; i++)
         {
-            let img = new Image();
+            var img = new Image();
             img.assetName = this.queue[i].name;
             img.assetmanager = this;
             img.callback = callback;
-            img.addEventListener('load', this.onLoadSuccess);
-            img.addEventListener('error', this.onLoadError);
+            img.addEventListener("load", this.onLoadSuccess);
+            img.addEventListener("error", this.onLoadError);
             img.src = this.queue[i].path;
         }
 
@@ -631,7 +594,7 @@ let assetmanager = {
  * Events listeners
  */
 
-let evtlstmanager = {
+var evtlstmanager = {
 
     init: function() {
         this.setup();
@@ -643,7 +606,7 @@ let evtlstmanager = {
         this.onContextMenu = function(event) {
             event.preventDefault();
             return false;
-        }
+        };
 
         // Mouse controller
         this.onMouseDown = function(event) {
@@ -653,7 +616,7 @@ let evtlstmanager = {
             } else if (event.which == KEY.MOUSE_RIGHT) {
                 game.rightClick(event.offsetX, event.offsetY);
             }
-        }
+        };
 
         gameboard_canvas.addEventListener("contextmenu", this.onContextMenu);
         gameboard_canvas.addEventListener("mousedown", this.onMouseDown);
@@ -662,7 +625,7 @@ let evtlstmanager = {
 
     reset: function() {
 
-        gameboard_canvas.removeEventListener('mousedown', this.onMouseDown);
+        gameboard_canvas.removeEventListener("mousedown", this.onMouseDown);
         this.onMouseDown = function() {};
 
     },

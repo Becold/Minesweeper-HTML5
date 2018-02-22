@@ -50,17 +50,12 @@ var _ = {
 
     // Settings of the game
     settings: {
-        nb_mines: 50
+        nb_mines: 2,
+        columns: 10, // Number of tiles on x-axe
+        rows: 10 // Number of tiles on y-axe
     }
 
 };
-
-// Number of tiles on x-axe
-var columns = 30;
-
-// Number of tiles on y-axe
-var rows = 16;
-
 
 /*
  * Constants
@@ -108,10 +103,10 @@ var TILE_BORDER_SIZE = 0;
 // Canvas info
 var CANVAS = {
     // Canvas width (in px)
-    WIDTH: columns * (TILE_SIZE + (2 * TILE_BORDER_SIZE)),
+    WIDTH: _.settings.columns * (TILE_SIZE + (2 * TILE_BORDER_SIZE)),
 
     // Canvas height (in px)
-    HEIGHT: rows * (TILE_SIZE + (2 * TILE_BORDER_SIZE))
+    HEIGHT: _.settings.rows * (TILE_SIZE + (2 * TILE_BORDER_SIZE))
 };
 
 
@@ -123,7 +118,7 @@ var render = {
 
     hud: {
 
-        updateNbDiscoveredMines: function(value) {
+        updateNbDiscoveredCells: function(value) {
 
             _.score.nb_discovered_cells = value === 0 ? 0 : Number(document.getElementById("_nb_discovered_cells").innerHTML) + value;
             document.getElementById("_nb_discovered_cells").innerHTML = _.score.nb_discovered_cells;
@@ -150,9 +145,9 @@ var render = {
     // Draw all cells (on the game board)
     drawCells: function() {
 
-        for (var y = 0; y < rows; y++)
+        for (var y = 0; y < _.settings.rows; y++)
         {
-            for (var x = 0; x < columns; x++)
+            for (var x = 0; x < _.settings.columns; x++)
             {
                 this.drawCell(_.board[y][x]);
             }
@@ -228,7 +223,7 @@ var game = {
 
         // Reset score
         render.hud.updateNbFlags(0);
-        render.hud.updateNbDiscoveredMines(0);
+        render.hud.updateNbDiscoveredCells(0);
 
         // Create the grid
         _.board = this.createGrid();
@@ -243,10 +238,10 @@ var game = {
     //
     createGrid: function() {
         var board = [];
-        for (var y = 0; y < rows; y++)
+        for (var y = 0; y < _.settings.rows; y++)
         {
             board[y] = [];
-            for (var x = 0; x < columns; x++)
+            for (var x = 0; x < _.settings.columns; x++)
             {
                 board[y][x] = {
                     x: x,
@@ -271,8 +266,8 @@ var game = {
             while (true)
             {
                 mine = {
-                    y: Math.floor(rand(0, rows)),
-                    x: Math.floor(rand(0, columns))
+                    y: Math.floor(rand(0, _.settings.rows)),
+                    x: Math.floor(rand(0, _.settings.columns))
                 };
 
                 if (_.board[mine.y][mine.x].solution != -1)
@@ -315,6 +310,16 @@ var game = {
     //
     win: function() {
         this.end("gagné");
+    },
+
+    checkForWin: function() {
+        var totalCells = _.settings.rows * _.settings.columns;
+        console.log(totalCells);
+        console.log(_.score.nb_discovered_cells);
+        if (totalCells - _.settings.nb_mines == _.score.nb_discovered_cells)
+        {
+            this.win();
+        }
     },
 
     // Loop function (on each frame)
@@ -366,6 +371,7 @@ var game = {
             else
             {
                 render.drawCell(_.board[y][x]);
+                render.hud.updateNbDiscoveredCells(1);
 
                 // If this is an empty cell, display adjacents cells
                 if(_.board[y][x].solution === 0)
@@ -376,26 +382,30 @@ var game = {
                     {
                         var self = this;
                         var newCells = [];
-                        cells.forEach(function (cell) {
-                            self.getAdjacentsCells(cell.x, cell.y).forEach(function (cellAdj) {
-                                if (cellAdj.state == CELL_STATE.MARKED_MINE || cellAdj.state == CELL_STATE.QUESTION_MARK)
+                        cells.forEach(function (cell)
+                        {
+                            self.getAdjacentsCells(cell.x, cell.y).forEach(function (cellAdj)
+                            {
+                                if (cellAdj.state == CELL_STATE.NOT_DISPLAYED)
                                 {
-                                    return;
-                                }
+                                    render.hud.updateNbDiscoveredCells(1);
 
-                                if (cellAdj.solution === 0 && cellAdj.state == CELL_STATE.NOT_DISPLAYED)
-                                {
-                                    newCells.push(cellAdj);
+                                    if (cellAdj.solution === 0 && cellAdj.state == CELL_STATE.NOT_DISPLAYED)
+                                    {
+                                        newCells.push(cellAdj);
+                                    }
+                                    cellAdj.state = CELL_STATE.DISPLAYED;
+                                    render.drawCell(cellAdj);
                                 }
-                                cellAdj.state = CELL_STATE.DISPLAYED;
-                                render.drawCell(cellAdj);
-                                render.hud.updateNbDiscoveredMines(1);
                             });
                             cells = newCells;
                         });
                     }
                 }
             }
+
+            // Check if win
+            this.checkForWin();
         }
 
     },
@@ -447,7 +457,7 @@ var game = {
         {
             for (var k = -1; k <= 1; k++)
             {
-                if (_between(posY+k, [0, rows-1]) && _between(posX+j, [0, columns-1]))
+                if (_between(posY+k, [0, _.settings.rows-1]) && _between(posX+j, [0, _.settings.columns-1]))
                 {
                     cells.push(_.board[posY + k][posX + j]);
                 }

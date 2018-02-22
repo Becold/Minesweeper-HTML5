@@ -29,7 +29,6 @@ function _between(value, range) { return (value >= range[0]) && (value <= range[
  */
 
 var gameboard_canvas = document.getElementById("gameboard_canvas");
-
 var gameboard = gameboard_canvas.getContext("2d"); // Background game board
 
 var _ = {
@@ -39,7 +38,8 @@ var _ = {
     // Player score
     score: {
         nb_discovered_cells: 0,
-        nb_flags: 0
+        nb_flags: 0,
+        nb_marked_mine: 0
     },
 
     // Hold the requestAnimationFrame
@@ -119,17 +119,27 @@ var render = {
     hud: {
 
         updateNbDiscoveredCells: function(value) {
+            value = Number(document.getElementById("_nb_discovered_cells").innerHTML) + value;
+            value = value <= 0 ? 0 : value;
 
-            _.score.nb_discovered_cells = value === 0 ? 0 : Number(document.getElementById("_nb_discovered_cells").innerHTML) + value;
+            _.score.nb_discovered_cells = value;
             document.getElementById("_nb_discovered_cells").innerHTML = _.score.nb_discovered_cells;
-
         },
 
         updateNbFlags: function(value) {
+            value = Number(document.getElementById("_nb_flags").innerHTML) + value;
+            value = value <= 0 ? 0 : value;
 
-            _.score.nb_flags = value === 0 ? 0 : Number(document.getElementById("_nb_flags").innerHTML) + value;
+            _.score.nb_flags = value;
             document.getElementById("_nb_flags").innerHTML = _.score.nb_flags;
+        },
 
+        updateNbMarkedMines: function(value) {
+            value = Number(document.getElementById("_nb_marked_mines").innerHTML) + value;
+            value = value <= 0 ? 0 : value;
+
+            _.score.nb_marked_mine = value;
+            document.getElementById("_nb_marked_mines").innerHTML = _.score.nb_marked_mine;
         }
 
     },
@@ -424,16 +434,19 @@ var game = {
                 case CELL_STATE.NOT_DISPLAYED:
                     _.board[y][x].state = CELL_STATE.MARKED_MINE;
                     render.drawCell(_.board[y][x]);
-                    render.hud.updateNbFlags(1);
+                    render.hud.updateNbMarkedMines(1);
+                    render.hud.updateNbFlags(-1);
                     break;
                 case CELL_STATE.MARKED_MINE:
                     _.board[y][x].state = CELL_STATE.QUESTION_MARK;
                     render.drawCell(_.board[y][x]);
-                    render.hud.updateNbFlags(-1);
+                    render.hud.updateNbMarkedMines(-1);
+                    render.hud.updateNbFlags(1);
                     break;
                 case CELL_STATE.QUESTION_MARK:
                     _.board[y][x].state = CELL_STATE.NOT_DISPLAYED;
                     render.drawCell(_.board[y][x]);
+                    render.hud.updateNbFlags(-1);
                     break;
             }
         }

@@ -50,7 +50,7 @@ var _ = {
 
     // Settings of the game
     settings: {
-        nb_mines: 2,
+        nb_mines: 5,
         columns: 10, // Number of tiles on x-axe
         rows: 10 // Number of tiles on y-axe
     }

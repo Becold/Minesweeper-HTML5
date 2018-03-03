@@ -78,17 +78,10 @@
       <div class="hud">
         <div class="section settings">
           <div>
-            <span class="subtitle">Difficulté:</span>
-            <input type="radio" name="difficulty" id="easy" value="easy" /><label for="easy">Facile</label>
-            <input type="radio" name="difficulty" id="medium" value="medium" /><label for="medium">Intermédiaire</label>
-            <input type="radio" name="difficulty" id="hard" value="hard" /><label for="hard">Difficile</label>
-          </div>
-
-          <div>
             <span class="subtitle">Paramètres de la partie:</span>
-            <span>Nombre de mines:</span> <input type="number" name="nb_mines" value="10" /><br>
-            <span>Taille du plateau:</span> <input type="number" class="settings-size" name="height" value="9" /> x <input type="number" class="settings-size" name="width" value="9" /><br>
-            <button class="settings-button" id="btn_generate">Générer</button>
+            <span>Nombre de mines:</span> <input type="number" id="_nb_mines" name="nb_mines" value="10" /><br>
+            <span>Taille du plateau:</span> <input type="number" id="_height" class="settings-size" name="height" value="9" /> x <input type="number" id="_width" class="settings-size" name="width" value="9" /><br>
+            <button class="settings-button" id="_do_generate">Générer</button>
           </div>
         </div>
 

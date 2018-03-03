@@ -67,25 +67,6 @@ var KEY = {
     MOUSE_RIGHT: 3
 };
 
-// Difficulty pressets
-var DIFFICULTIES = {
-    EASY: {
-        NB_MINES: 10,
-        WIDTH: 9,
-        HEIGHT: 9
-    },
-    MEDIUM: {
-        NB_MINES: 40,
-        WIDTH: 16,
-        HEIGHT: 16
-    },
-    HARD: {
-        NB_MINES: 99,
-        WIDTH: 30,
-        HEIGHT: 16
-    }
-};
-
 // Cell states
 var CELL_STATE = {
     DISPLAYED: 0,
@@ -103,10 +84,10 @@ var TILE_BORDER_SIZE = 0;
 // Canvas info
 var CANVAS = {
     // Canvas width (in px)
-    WIDTH: _.settings.columns * (TILE_SIZE + (2 * TILE_BORDER_SIZE)),
+    WIDTH: function() { return _.settings.columns * (TILE_SIZE + (2 * TILE_BORDER_SIZE)) },
 
     // Canvas height (in px)
-    HEIGHT: _.settings.rows * (TILE_SIZE + (2 * TILE_BORDER_SIZE))
+    HEIGHT: function() { return _.settings.rows * (TILE_SIZE + (2 * TILE_BORDER_SIZE)) }
 };
 
 
@@ -115,61 +96,75 @@ var CANVAS = {
  */
 
 var render = {
-
     hud: {
+        settings: {
+            init: function() {
+                document.getElementById("_do_generate").addEventListener("click", render.hud.settings.onGenerate);
+            },
+            onGenerate: function(event) {
+                _.settings.nb_mines = Number(document.getElementById("_nb_mines").value);
+                _.settings.columns = Number(document.getElementById("_width").value);
+                _.settings.rows = Number(document.getElementById("_height").value);
 
-        updateNbDiscoveredCells: function(value) {
-            if (value != 0)
-            {
-                value = Number(document.getElementById("_nb_discovered_cells").innerHTML) + value;
-                value = value <= 0 ? 0 : value;
+                game.run();
             }
-            else
-            {
-                value = 0;
-            }
-
-            _.score.nb_discovered_cells = value;
-            document.getElementById("_nb_discovered_cells").innerHTML = _.score.nb_discovered_cells;
         },
+        statistics: {
+            updateNbDiscoveredCells: function(value) {
+                if (value != 0)
+                {
+                    value = Number(document.getElementById("_nb_discovered_cells").innerHTML) + value;
+                    value = value <= 0 ? 0 : value;
+                }
+                else
+                {
+                    value = 0;
+                }
 
-        updateNbFlags: function(value) {
-            if (value != 0)
-            {
-                value = Number(document.getElementById("_nb_flags").innerHTML) + value;
-                value = value <= 0 ? 0 : value;
-            }
-            else
-            {
-                value = 0;
-            }
+                _.score.nb_discovered_cells = value;
+                document.getElementById("_nb_discovered_cells").innerHTML = _.score.nb_discovered_cells;
+            },
 
-            _.score.nb_flags = value;
-            document.getElementById("_nb_flags").innerHTML = _.score.nb_flags;
-        },
+            updateNbFlags: function(value) {
+                if (value != 0)
+                {
+                    value = Number(document.getElementById("_nb_flags").innerHTML) + value;
+                    value = value <= 0 ? 0 : value;
+                }
+                else
+                {
+                    value = 0;
+                }
 
-        updateNbMarkedMines: function(value) {
-            if (value != 0)
-            {
-                value = Number(document.getElementById("_nb_marked_mines").innerHTML) + value;
-                value = value <= 0 ? 0 : value;
-            }
-            else
-            {
-                value = 0;
-            }
+                _.score.nb_flags = value;
+                document.getElementById("_nb_flags").innerHTML = _.score.nb_flags;
+            },
 
-            _.score.nb_marked_mine = value;
-            document.getElementById("_nb_marked_mines").innerHTML = _.score.nb_marked_mine;
+            updateNbMarkedMines: function(value) {
+                if (value != 0)
+                {
+                    value = Number(document.getElementById("_nb_marked_mines").innerHTML) + value;
+                    value = value <= 0 ? 0 : value;
+                }
+                else
+                {
+                    value = 0;
+                }
+
+                _.score.nb_marked_mine = value;
+                document.getElementById("_nb_marked_mines").innerHTML = _.score.nb_marked_mine;
+            }
         }
-
     },
 
     init: function() {
 
         // Set gameboard canvas
-        gameboard_canvas.width = CANVAS.WIDTH;
-        gameboard_canvas.height = CANVAS.HEIGHT;
+        gameboard_canvas.width = CANVAS.WIDTH();
+        gameboard_canvas.height = CANVAS.HEIGHT();
+
+        // Settings panel initisialization
+        render.hud.settings.init();
 
     },
 
@@ -249,13 +244,10 @@ var game = {
     },
 
     start: function() {
-        // @TODO Validations
-        // Vérifier si nb_mines > rows*columns
-
         // Reset score
-        render.hud.updateNbFlags(0);
-        render.hud.updateNbDiscoveredCells(0);
-        render.hud.updateNbMarkedMines(0);
+        render.hud.statistics.updateNbFlags(0);
+        render.hud.statistics.updateNbDiscoveredCells(0);
+        render.hud.statistics.updateNbMarkedMines(0);
 
         // Create the grid
         _.board = this.createGrid();
@@ -346,8 +338,6 @@ var game = {
 
     checkForWin: function() {
         var totalCells = _.settings.rows * _.settings.columns;
-        console.log(totalCells);
-        console.log(_.score.nb_discovered_cells);
         if (totalCells - _.settings.nb_mines == _.score.nb_discovered_cells)
         {
             this.win();
@@ -403,7 +393,7 @@ var game = {
             else
             {
                 render.drawCell(_.board[y][x]);
-                render.hud.updateNbDiscoveredCells(1);
+                render.hud.statistics.updateNbDiscoveredCells(1);
 
                 // If this is an empty cell, display adjacents cells
                 if(_.board[y][x].solution === 0)
@@ -420,7 +410,7 @@ var game = {
                             {
                                 if (cellAdj.state == CELL_STATE.NOT_DISPLAYED)
                                 {
-                                    render.hud.updateNbDiscoveredCells(1);
+                                    render.hud.statistics.updateNbDiscoveredCells(1);
 
                                     if (cellAdj.solution === 0 && cellAdj.state == CELL_STATE.NOT_DISPLAYED)
                                     {
@@ -456,19 +446,19 @@ var game = {
                 case CELL_STATE.NOT_DISPLAYED:
                     _.board[y][x].state = CELL_STATE.MARKED_MINE;
                     render.drawCell(_.board[y][x]);
-                    render.hud.updateNbMarkedMines(1);
-                    render.hud.updateNbFlags(-1);
+                    render.hud.statistics.updateNbMarkedMines(1);
+                    render.hud.statistics.updateNbFlags(-1);
                     break;
                 case CELL_STATE.MARKED_MINE:
                     _.board[y][x].state = CELL_STATE.QUESTION_MARK;
                     render.drawCell(_.board[y][x]);
-                    render.hud.updateNbMarkedMines(-1);
-                    render.hud.updateNbFlags(1);
+                    render.hud.statistics.updateNbMarkedMines(-1);
+                    render.hud.statistics.updateNbFlags(1);
                     break;
                 case CELL_STATE.QUESTION_MARK:
                     _.board[y][x].state = CELL_STATE.NOT_DISPLAYED;
                     render.drawCell(_.board[y][x]);
-                    render.hud.updateNbFlags(-1);
+                    render.hud.statistics.updateNbFlags(-1);
                     break;
             }
         }

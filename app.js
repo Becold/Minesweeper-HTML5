@@ -102,11 +102,24 @@ var render = {
                 document.getElementById("_do_generate").addEventListener("click", render.hud.settings.onGenerate);
             },
             onGenerate: function(event) {
-                _.settings.nb_mines = Number(document.getElementById("_nb_mines").value);
-                _.settings.columns = Number(document.getElementById("_width").value);
-                _.settings.rows = Number(document.getElementById("_height").value);
+                var nbMines = Math.floor(Number(document.getElementById("_nb_mines").value));
+                var width = Math.floor(Number(document.getElementById("_width").value));
+                var height = Math.floor(Number(document.getElementById("_height").value));
 
-                game.run();
+                if (nbMines >= width * height) {
+                    alert("Il y a trop de mines!");
+                }
+                else if (nbMines <= 0) {
+                    alert("Il n'y a pas assez de mines!");
+                }
+                else {
+                    _.settings.nb_mines = nbMines;
+                    _.settings.columns = Math.max(width, height);
+                    _.settings.rows = Math.min(width, height);
+
+                    game.run();
+                }
+
             }
         },
         statistics: {

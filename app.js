@@ -106,11 +106,24 @@ var render = {
                 var width = Math.floor(Number(document.getElementById("_width").value));
                 var height = Math.floor(Number(document.getElementById("_height").value));
 
-                if (nbMines >= width * height) {
-                    alert("Il y a trop de mines!");
+                // Verification
+                var error = "";
+                if (width <= 0 || height <= 0) {
+                    error += "La taille ne peut pas être négatif.\n";
                 }
-                else if (nbMines <= 0) {
-                    alert("Il n'y a pas assez de mines!");
+                if (width > 25 || height > 25) {
+                    error += "Le plateau de jeu est trop grand.\n";
+                }
+                if (nbMines >= width * height) {
+                    error += "Il y a trop de mines.\n";
+                }
+                if (nbMines <= 0) {
+                    error += "Il n'y a pas assez de mines!\n";
+                }
+
+                // Display an error or Generate the board
+                if (error != "") {
+                    alert(error.slice(0, -2));
                 }
                 else {
                     _.settings.nb_mines = nbMines;
